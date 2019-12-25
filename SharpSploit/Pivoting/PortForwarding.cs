@@ -22,8 +22,8 @@ namespace SharpSploit.Pivoting
             public int ForwardPort { get; set; }
         }
 
-        private static readonly List<ReversePortForward> _reversePortForwards = new List<ReversePortForward>();
-        private static readonly List<Dictionary<int, List<Socket>>> _serverSockets = new List<Dictionary<int, List<Socket>>>();
+        public static List<ReversePortForward> _reversePortForwards = new List<ReversePortForward>();
+        public static List<Dictionary<int, List<Socket>>> _serverSockets = new List<Dictionary<int, List<Socket>>>();
 
         public static bool StartReversePortForward(string BindPort, string ForwardAddress, string ForwardPort)
         {
