@@ -482,5 +482,88 @@ namespace SharpSploit.Enumeration
                 }
             }
         }
+
+        /// <summary>
+        /// SystemProxyResult represents a system proxy configuration, used with the GetSystemProxySettings() function.
+        /// </summary>
+        public sealed class SystemProxyResult : SharpSploitResult
+        {
+            public string Hive { get; set; } = "";
+            public bool AutoDetect { get; set; } = false;
+            public string AutoConfigURL { get; set; } = "";
+            public bool ProxyEnable { get; set; } = false;
+            public string ProxyServer { get; set; } = "";
+            public int ProxyPort { get; set; } = 0;
+            public string ProxyOverride { get; set; } = "";
+            protected internal override IList<SharpSploitResultProperty> ResultProperties
+            {
+                get
+                {
+                    return new List<SharpSploitResultProperty> {
+                        new SharpSploitResultProperty { Name = "Hive", Value = this.Hive },
+                        new SharpSploitResultProperty { Name = "AutoDetect", Value = this.AutoDetect },
+                        new SharpSploitResultProperty { Name = "AutoConfigURL", Value = this.AutoConfigURL },
+                        new SharpSploitResultProperty { Name = "ProxyEnable", Value = this.ProxyEnable },
+                        new SharpSploitResultProperty { Name = "ProxyServer", Value = this.ProxyServer },
+                        new SharpSploitResultProperty { Name = "ProxyPort", Value = this.ProxyPort },
+                        new SharpSploitResultProperty { Name = "ProxyOverride", Value = this.ProxyOverride }
+                    };
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns a SharpSploitResultList of SystemProxyResults from HKCU and HKLM.
+        /// </summary>
+        /// <returns></returns>
+        public static SharpSploitResultList<SystemProxyResult> GetSystemProxySettings()
+        {
+            SharpSploitResultList<SystemProxyResult> proxies = new SharpSploitResultList<SystemProxyResult>();
+            try
+            {
+                var proxyEnable = Convert.ToBoolean(int.Parse(Registry.GetRegistryKey(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "ProxyEnable")));
+                var autoDetect = Convert.ToBoolean(int.Parse(Registry.GetRegistryKey(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "AutoDetect")));
+                if (proxyEnable || autoDetect)
+                {
+                    var proxyServer = Registry.GetRegistryKey(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "ProxyServer");
+                    var autoConfigUrl = Registry.GetRegistryKey(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "AutoConfigURL");
+                    var proxyOverride = Registry.GetRegistryKey(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "ProxyOverride");
+                    proxies.Add(new SystemProxyResult
+                    {
+                        Hive = "HKCU",
+                        AutoDetect = autoDetect,
+                        AutoConfigURL = autoConfigUrl,
+                        ProxyEnable = proxyEnable,
+                        ProxyServer = proxyServer.Split(':')[0],
+                        ProxyPort = int.Parse(proxyServer.Split(':')[1]),
+                        ProxyOverride = proxyOverride
+                    });
+                }
+            }
+            catch { }
+            try
+            {
+                var proxyEnable = Convert.ToBoolean(int.Parse(Registry.GetRegistryKey(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "ProxyEnable")));
+                var autoDetect = Convert.ToBoolean(int.Parse(Registry.GetRegistryKey(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "AutoDetect")));
+                if (proxyEnable || autoDetect)
+                {
+                    var proxyServer = Registry.GetRegistryKey(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "ProxyServer");
+                    var autoConfigUrl = Registry.GetRegistryKey(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "AutoConfigURL");
+                    var proxyOverride = Registry.GetRegistryKey(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Internet Settings", "ProxyOverride");
+                    proxies.Add(new SystemProxyResult
+                    {
+                        Hive = "HKLM",
+                        AutoDetect = autoDetect,
+                        AutoConfigURL = autoConfigUrl,
+                        ProxyEnable = proxyEnable,
+                        ProxyServer = proxyServer.Split(':')[0],
+                        ProxyPort = int.Parse(proxyServer.Split(':')[1]),
+                        ProxyOverride = proxyOverride
+                    });
+                }
+            }
+            catch { }
+            return proxies;
+        }
     }
 }
