@@ -12,6 +12,9 @@ using SharpSploit.Generic;
 
 namespace SharpSploit.Pivoting
 {
+    /// <summary>
+    /// PortForwarding is a library for managing port forwards.
+    /// </summary>
     public class PortForwarding
     {
         public class ReversePortForward
@@ -25,12 +28,33 @@ namespace SharpSploit.Pivoting
         public static List<ReversePortForward> _reversePortForwards = new List<ReversePortForward>();
         public static List<Dictionary<int, List<Socket>>> _serverSockets = new List<Dictionary<int, List<Socket>>>();
 
+        /// <summary>
+        /// Starts a new ReversePortForward.
+        /// </summary>
+        /// <param name="BindPort">The port to bind to.</param>
+        /// <param name="ForwardAddress">The IP Address or DNS entry to forward traffic to.</param>
+        /// <param name="ForwardPort">The port to forward traffic to.</param>
+        /// <returns>Bool. True if successful, otherwise false.</returns>
         public static bool StartReversePortForward(string BindPort, string ForwardAddress, string ForwardPort)
         {
             var bindAddresses = new IPAddress[] { IPAddress.Any };
-            var bindPort = int.Parse(BindPort);
-            var forwardAddress = IPAddress.Parse(ForwardAddress);
-            var forwardPort = int.Parse(ForwardPort);
+
+            if (!int.TryParse(BindPort, out int bindPort))
+                return false;
+
+            //var forwardAddress = IPAddress.Parse(ForwardAddress);
+
+            if (!IPAddress.TryParse(ForwardAddress, out IPAddress forwardAddress))
+            {
+                try {
+                    var ipHostInfo = Dns.GetHostEntry(ForwardAddress);
+                    forwardAddress = ipHostInfo.AddressList[0];
+                }
+                catch (SocketException) { return false; }
+            }
+
+            if (!int.TryParse(ForwardPort, out int forwardPort))
+                return false;
 
             // Check not already bound
             foreach (var serverSocket in _serverSockets)
@@ -40,7 +64,7 @@ namespace SharpSploit.Pivoting
             // Else bind the port on all interfaces
             var serverSockets = CreateServerSockets(bindAddresses, bindPort);
 
-            if (serverSockets.Count > 0)
+            if (serverSockets != null && serverSockets.Count > 0)
             {
                 // Create new object
                 var reversePortForward = new ReversePortForward
@@ -57,14 +81,24 @@ namespace SharpSploit.Pivoting
                 // Add sockets to list
                 _serverSockets.Add(new Dictionary<int, List<Socket>> { { bindPort, serverSockets } });
 
+                // Kick off the client sockets in a new thread
                 var thread = new Thread(() => ClientSocketThread(serverSockets, forwardAddress, forwardPort));
                 thread.Start();
 
                 return true;
             }
-            return false;
+            else
+            {
+                return false;
+            }
         }
 
+        /// <summary>
+        /// Accepts data on bound sockets, creates new client sockets, forwards data and relays responses back.
+        /// </summary>
+        /// <param name="serverSockets">A list of bound Sockets.</param>
+        /// <param name="forwardAddress">The IP address to forward traffic to.</param>
+        /// <param name="forwardPort">The port to forward traffic to.</param>
         private static void ClientSocketThread(List<Socket> serverSockets, IPAddress forwardAddress, int forwardPort)
         {
             var remoteEndPoint = new IPEndPoint(forwardAddress, forwardPort);
@@ -103,6 +137,11 @@ namespace SharpSploit.Pivoting
             }
         }
 
+        /// <summary>
+        /// Stops the Reverse Port Forward bound on the specified port.
+        /// </summary>
+        /// <param name="BindPort">The Port the socket is bound to.</param>
+        /// <returns>Bool. True if successful, otherwise false.</returns>
         public static bool StopReversePortForward(string BindPort)
         {
             // Check if any bound sockets exit
@@ -140,6 +179,10 @@ namespace SharpSploit.Pivoting
             return true;
         }
 
+        /// <summary>
+        /// Get's a list of active Reverse Port Fowards.
+        /// </summary>
+        /// <returns></returns>
         public static SharpSploitResultList<ReversePortFwdResult> GetActiveReversePortForwards()
         {
             var results = new SharpSploitResultList<ReversePortFwdResult>();
@@ -161,6 +204,12 @@ namespace SharpSploit.Pivoting
             return results;
         }
 
+        /// <summary>
+        /// Binds a port to the specified IP Addresses.
+        /// </summary>
+        /// <param name="BindAddresses">An IPAddress array to bind to.</param>
+        /// <param name="BindPort">The port to bind on.</param>
+        /// <returns>A list of Sockets.</returns>
         private static List<Socket> CreateServerSockets(IPAddress[] BindAddresses, int BindPort)
         {
             var socketList = new List<Socket>();
@@ -183,6 +232,9 @@ namespace SharpSploit.Pivoting
             return socketList;
         }
 
+        /// <summary>
+        /// Represents an active Reverse Port Forward, used with GetActiveReversePortForwards().
+        /// </summary>
         public sealed class ReversePortFwdResult : SharpSploitResult
         {
             public string BindAddresses { get; set; }
