@@ -1708,6 +1708,54 @@
             <param name="ProcessName">Specifies the process name when the ProcessStart trigger is selected. Defaults to notepad.exe.</param>
             <param name="ScriptingEngine">Specifies the scripting engine when the ActiveScript consumer is selected. Defaults to VBScript.</param>
         </member>
+        <member name="T:SharpSploit.Pivoting.PortForwarding">
+            <summary>
+            PortForwarding is a library for managing port forwards.
+            </summary>
+        </member>
+        <member name="M:SharpSploit.Pivoting.PortForwarding.StartReversePortForward(System.String,System.String,System.String)">
+            <summary>
+            Starts a new ReversePortForward.
+            </summary>
+            <param name="BindPort">The port to bind to.</param>
+            <param name="ForwardAddress">The IP Address or DNS entry to forward traffic to.</param>
+            <param name="ForwardPort">The port to forward traffic to.</param>
+            <returns>Bool. True if successful, otherwise false.</returns>
+        </member>
+        <member name="M:SharpSploit.Pivoting.PortForwarding.ClientSocketThread(System.Collections.Generic.List{System.Net.Sockets.Socket},System.Net.IPAddress,System.Int32)">
+            <summary>
+            Accepts data on bound sockets, creates new client sockets, forwards data and relays responses back.
+            </summary>
+            <param name="serverSockets">A list of bound Sockets.</param>
+            <param name="forwardAddress">The IP address to forward traffic to.</param>
+            <param name="forwardPort">The port to forward traffic to.</param>
+        </member>
+        <member name="M:SharpSploit.Pivoting.PortForwarding.StopReversePortForward(System.String)">
+            <summary>
+            Stops the Reverse Port Forward bound on the specified port.
+            </summary>
+            <param name="BindPort">The Port the socket is bound to.</param>
+            <returns>Bool. True if successful, otherwise false.</returns>
+        </member>
+        <member name="M:SharpSploit.Pivoting.PortForwarding.GetActiveReversePortForwards">
+            <summary>
+            Get's a list of active Reverse Port Fowards.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:SharpSploit.Pivoting.PortForwarding.CreateServerSockets(System.Net.IPAddress[],System.Int32)">
+            <summary>
+            Binds a port to the specified IP Addresses.
+            </summary>
+            <param name="BindAddresses">An IPAddress array to bind to.</param>
+            <param name="BindPort">The port to bind on.</param>
+            <returns>A list of Sockets.</returns>
+        </member>
+        <member name="T:SharpSploit.Pivoting.PortForwarding.ReversePortFwdResult">
+            <summary>
+            Represents an active Reverse Port Forward, used with GetActiveReversePortForwards().
+            </summary>
+        </member>
         <member name="T:SharpSploit.PrivilegeEscalation.Exchange">
             <summary>
             Exchange is a class for abusing Microsoft Exchange for privilege escalation.
